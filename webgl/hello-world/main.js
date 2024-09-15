@@ -1,12 +1,17 @@
 const canvas = document.querySelector('canvas');
 const gl = canvas.getContext('webgl2');
 
-const vsource = `#version 300 es
+const pixelRatio = window.devicePixelRatio || 1;
+canvas.width = pixelRatio * canvas.clientWidth;
+canvas.height = pixelRatio * canvas.clientHeight;
+gl.viewport(0, 0, canvas.width, canvas.height);
+
+const vsource = /*glsl*/ `#version 300 es
 void main() {
     gl_PointSize = 150.0;
     gl_Position = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }`;
-const fsource = `#version 300 es
+const fsource = /*glsl*/ `#version 300 es
 precision mediump float;
 out vec4 fragColor;
 void main() {
