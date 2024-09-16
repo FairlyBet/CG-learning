@@ -71,6 +71,6 @@ const floatSize = 4;
 const stride = floatSize * 6;
 gl.vertexAttribPointer(aPointSizeLoc, 1, gl.FLOAT, false, stride, 0);
 gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, stride, floatSize);
-gl.vertexAttribPointer(aColorLoc, 3, gl.FLOAT, true, stride, floatSize * 3);
+gl.vertexAttribPointer(aColorLoc, 3, gl.FLOAT, false, stride, floatSize * 3);
 
 gl.drawArrays(gl.POINTS, 0, 3);
