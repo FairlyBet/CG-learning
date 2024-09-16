@@ -18,8 +18,21 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "7df1b35e0b19dba1",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "WebGL.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -85,7 +98,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Intro to Computer Graphics.md",
+                "file": "WebGL.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +115,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Intro to Computer Graphics.md",
+                "file": "WebGL.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +138,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Intro to Computer Graphics.md"
+                "file": "WebGL.md"
               }
             }
           }
@@ -148,8 +161,10 @@
   },
   "active": "50e680b08da08437",
   "lastOpenFiles": [
-    "images/Pasted image 20240913203832.png",
     "Intro to Computer Graphics.md",
+    "WebGL.md",
+    "images/Pasted image 20240916170759.png",
+    "images/Pasted image 20240913203832.png",
     "images",
     "images/Pasted image 20240913163331.png",
     "Welcome.md",

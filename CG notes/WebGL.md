@@ -1,0 +1,1 @@
+Difference between drawArrays and drawElements (place picture)
