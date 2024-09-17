@@ -73,14 +73,6 @@ gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, texCoordData, gl.STATIC_DRAW);
 gl.vertexAttribPointer(aTexCoordLoc, 2, gl.FLOAT, false, 0, 0);
 
-const loadImage = () => new Promise(resolve => {
-    const image = new Image();
-    image.src = 'kitten.jpg';
-    // image.crossOrigin = '';
-    image.onload = resolve(image);
-    img.onerror = () => reject(new Error(`Failed to load image: ${image.src}`));
-});
-
 // const pixels = new Uint8Array([
 //     255, 255, 255, 230, 25, 75, 60, 180, 75, 255, 225, 25,
 //     67, 99, 216, 245, 130, 49, 145, 30, 180, 70, 240, 240,
@@ -88,13 +80,11 @@ const loadImage = () => new Promise(resolve => {
 //     230, 190, 255, 154, 99, 36, 255, 250, 200, 0, 0, 0,
 // ]);
 
-const run = async () => {
-    const image = await loadImage();
-    console.log(image);
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 500, 300, 0, gl.RGB, gl.UNSIGNED_BYTE, image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-};
-run();
+const image = document.getElementById('myImage');
+
+const texture = gl.createTexture();
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 500, 300, 0, gl.RGB, gl.UNSIGNED_BYTE, image);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.drawArrays(gl.TRIANGLES, 0, 3);
