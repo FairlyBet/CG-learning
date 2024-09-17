@@ -73,6 +73,7 @@ gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, texCoordData, gl.STATIC_DRAW);
 gl.vertexAttribPointer(aTexCoordLoc, 2, gl.FLOAT, false, 0, 0);
 
+// 4x4 texture
 // const pixels = new Uint8Array([
 //     255, 255, 255, 230, 25, 75, 60, 180, 75, 255, 225, 25,
 //     67, 99, 216, 245, 130, 49, 145, 30, 180, 70, 240, 240,

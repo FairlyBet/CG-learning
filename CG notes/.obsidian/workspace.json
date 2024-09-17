@@ -31,8 +31,7 @@
               }
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -98,7 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "WebGL.md",
+                "file": "Intro to Computer Graphics.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -115,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "WebGL.md",
+                "file": "Intro to Computer Graphics.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -138,7 +137,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "WebGL.md"
+                "file": "Intro to Computer Graphics.md"
               }
             }
           }
@@ -159,10 +158,13 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "50e680b08da08437",
+  "active": "684bd2a8db104a91",
   "lastOpenFiles": [
-    "Intro to Computer Graphics.md",
     "WebGL.md",
+    "Pasted image 20240917224602.png",
+    "Pasted image 20240917224747.png",
+    "Pasted image 20240917222704.png",
+    "Intro to Computer Graphics.md",
     "images/Pasted image 20240916170759.png",
     "images/Pasted image 20240913203832.png",
     "images",
