@@ -76,7 +76,9 @@ gl.vertexAttribPointer(aTexCoordLoc, 2, gl.FLOAT, false, 0, 0);
 const loadImage = () => new Promise(resolve => {
     const image = new Image();
     image.src = 'kitten.jpg';
-    image.addEventListener('load', () => resolve(image));
+    // image.crossOrigin = '';
+    image.onload = resolve(image);
+    img.onerror = () => reject(new Error(`Failed to load image: ${image.src}`));
 });
 
 // const pixels = new Uint8Array([
@@ -88,6 +90,7 @@ const loadImage = () => new Promise(resolve => {
 
 const run = async () => {
     const image = await loadImage();
+    console.log(image);
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 500, 300, 0, gl.RGB, gl.UNSIGNED_BYTE, image);
