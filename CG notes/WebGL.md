@@ -5,3 +5,4 @@ Beneficial case for using `drawElements` is when there's need to produce smoothe
 But for low poly meshes this would lead to increased memory consumption and give no benefit. So it is better to use `drawArrays` in this case.
 ![[Pasted image 20240917224602.png]]
 
+TODO: Write about how VAOs are created and edited.
