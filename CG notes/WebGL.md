@@ -21,3 +21,7 @@ layout(location=4) mat4 m; // this does as every row of mat4 takes one location
 ```
 In order to set mat4 attribute:
 ![[Pasted image 20240927181306.png]]
+
+TODO:
+Write about other matrices
+Write a light attenuation approximated formula from lights video

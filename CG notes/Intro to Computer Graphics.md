@@ -57,3 +57,10 @@ Difference between **UV** and **ST** coordinates (specifically in OpenGL)
 UV goes from 0 to value of image resolution
 ST goes from 0 to 1 (normalized UV)
 ![[Pasted image 20240927151100.png]]
+Normal matrix applies transformation on normal 
+**Normal matrix** production:
+1. Take Model matrix and make it 3x3 as translation component isn't needed
+2. Apply inverse
+3. Apply transpose
+![[Pasted image 20240928191537.png]]
+Matrix is represented as Rotation2 * Scale * Rotation1. Applying inverse gets the desired Scale but also inverses Rotation component. As rotation matrices are orthogonal they may be inversed by transposing and transpose doesn't affect scale component. So after these operations the desired matrix that adjusts normals for non-uniform scale is acquired.
