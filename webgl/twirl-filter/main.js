@@ -33,7 +33,6 @@ in vec2 vTexCoord;
 out vec4 fragColor;
 
 void main() {
-    vec2 aspect = vec2(1.0, uAspect);
     vec2 coord = vTexCoord - uCenter;
     float distance = length(vec2(coord.x, coord.y / uAspect));
     if (distance < uRadius) {

@@ -29,7 +29,6 @@ uniform vec2 uTexelSize;
 in vec2 vTexCoord;
 out vec4 fragColor;
 
-
 void main() {
     const float KERNEL[] = float[]( 
         1.0,  1.0, 1.0, 
