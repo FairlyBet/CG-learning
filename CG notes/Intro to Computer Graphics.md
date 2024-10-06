@@ -64,3 +64,4 @@ Normal matrix applies transformation on normal
 3. Apply transpose
 ![[Pasted image 20240928191537.png]]
 Matrix is represented as Rotation2 * Scale * Rotation1. Applying inverse gets the desired Scale but also inverses Rotation component. As rotation matrices are orthogonal they may be inversed by transposing and transpose doesn't affect scale component. So after these operations the desired matrix that adjusts normals for non-uniform scale is acquired.
+
