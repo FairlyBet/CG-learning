@@ -93,7 +93,7 @@ const image = document.getElementById('myImage');
 const texture1 = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0 + tex1Unit);
 gl.bindTexture(gl.TEXTURE_2D, texture1);
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, texture);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
 // 4x4 texture
