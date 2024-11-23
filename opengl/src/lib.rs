@@ -214,9 +214,23 @@ pub fn draw_buffers(buffers: &[u32]) {
     }
 }
 
-pub fn texture_storage2d(target: u32, levels: i32, format: u32, width: i32, height: i32) {
-    unsafe {
-        gl::TexStorage2D(target, levels, format, width, height);
+pub fn texture_storage2d(target: u32, levels: i32, format: u32, mut width: i32, mut height: i32) {
+    for level in 0..levels {
+        unsafe {
+            gl::TexImage2D(
+                target,
+                level,
+                format as i32,
+                width,
+                height,
+                0,
+                gl::RGB,
+                gl::UNSIGNED_BYTE,
+                std::ptr::null(),
+            );
+        }
+        width /= 2;
+        height /= 2;
     }
 }
 

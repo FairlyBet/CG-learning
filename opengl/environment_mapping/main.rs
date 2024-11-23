@@ -17,11 +17,11 @@ fn main() {
 
     let vertex_shader_source = include_str!("shaders/main.vert");
     let fragment_shader_source = include_str!("shaders/main.frag");
-    let vert = cg_recap::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
-    let frag = cg_recap::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
-    let program = cg_recap::create_vert_frag_prog(vert, frag).unwrap();
-    let clip2world_loc = cg_recap::get_location(program, "clip2world").unwrap();
-    cg_recap::use_program(program);
+    let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
+    let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
+    let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
+    let clip2world_loc = cgl::get_location(program, "clip2world").unwrap();
+    cgl::use_program(program);
 
     let aspect = width as f32 / height as f32;
     let projection = glm::perspective(aspect, 45.0_f32.to_radians(), 0.1, 1000.0);
@@ -53,38 +53,35 @@ fn main() {
         ),
     ];
 
-    unsafe {
-        let mut cube_map = 0;
-        gl::CreateTextures(gl::TEXTURE_CUBE_MAP, 1, &mut cube_map);
-        gl::BindTexture(gl::TEXTURE_CUBE_MAP, cube_map);
-        for (img, face) in images {
-            gl::TexImage2D(
-                face,
-                0,
-                gl::RGB as i32,
-                img.width() as i32,
-                img.height() as i32,
-                0,
-                gl::RGB,
-                gl::UNSIGNED_BYTE,
-                img.as_bytes().as_ptr().cast(),
-            );
-        }
-        gl::GenerateMipmap(gl::TEXTURE_CUBE_MAP);
-        gl::TexParameteri(
-            gl::TEXTURE_CUBE_MAP,
-            gl::TEXTURE_MIN_FILTER,
-            gl::LINEAR_MIPMAP_LINEAR as i32,
+    let cube_map = cgl::create_texture(gl::TEXTURE_CUBE_MAP).unwrap();
+    cgl::bind_texture(cube_map, gl::TEXTURE_CUBE_MAP);
+
+    for (img, face) in images {
+        cgl::texture_image2d(
+            face,
+            0,
+            gl::RGB,
+            img.width() as i32,
+            img.height() as i32,
+            gl::RGB,
+            gl::UNSIGNED_BYTE,
+            img.as_bytes(),
         );
     }
+    cgl::generate_mipmaps(gl::TEXTURE_CUBE_MAP);
+    cgl::texture_parameter(
+        gl::TEXTURE_CUBE_MAP,
+        gl::TEXTURE_MIN_FILTER,
+        gl::LINEAR_MIPMAP_LINEAR,
+    );
 
-    cg_recap::enable(gl::TEXTURE_CUBE_MAP_SEAMLESS);
-    cg_recap::enable(gl::DEPTH_TEST);
+    cgl::enable(gl::TEXTURE_CUBE_MAP_SEAMLESS);
+    cgl::enable(gl::DEPTH_TEST);
 
     while !window.should_close() {
         glfw.poll_events();
 
-        let angle = glfw.get_time() as f32 * std::f32::consts::FRAC_PI_8;
+        let angle = glfw.get_time() as f32 * std::f32::consts::PI / 12.0;
         let rotation = glm::rotation(angle, &glm::Vec3::y_axis());
         let mvp = projection * rotation;
         let clip2world = mvp.try_inverse().unwrap();
@@ -93,8 +90,8 @@ fn main() {
             gl::UniformMatrix4fv(clip2world_loc, 1, gl::FALSE, clip2world.as_ptr());
         }
 
-        cg_recap::clear(gl::DEPTH_BUFFER_BIT);
-        cg_recap::draw_arrays(gl::TRIANGLES, 0, 3);
+        cgl::clear(gl::DEPTH_BUFFER_BIT);
+        cgl::draw_arrays(gl::TRIANGLES, 0, 3);
         window.swap_buffers();
     }
 }
