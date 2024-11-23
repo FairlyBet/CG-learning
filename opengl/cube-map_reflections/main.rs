@@ -72,6 +72,10 @@ fn main() {
         gl::TEXTURE_MIN_FILTER,
         gl::LINEAR_MIPMAP_LINEAR,
     );
+    cgl::texture_parameter(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
+    cgl::texture_parameter(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE);
+    cgl::texture_parameter(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE);
+    cgl::texture_parameter(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE);
 
     let err = unsafe { gl::GetError() };
     println!("{err}");
