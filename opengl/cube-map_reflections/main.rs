@@ -19,7 +19,9 @@ fn main() {
     let icosphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\icosphere.glb");
 
     let reflection_shader = ReflectionShader::new();
-    let background_shader = BackgroundShader::new();
+    let background_shader =
+        BackgroundShader::new(include_str!(r"..\environment_mapping\shaders\main.vert"));
+    let cubemap_background_shader = BackgroundShader::new(include_str!(r"shaders\to_cubemap.vert"));
     let object_shader = ObjectShader::new();
 
     let aspect = width as f32 / height as f32;
@@ -124,37 +126,75 @@ fn main() {
 
     while !window.should_close() {
         glfw.poll_events();
-        
+
         let time = glfw.get_time() as f32;
+        // let view = glm::rotation(time * std::f32::consts::PI / 12.0, &glm::Vec3::x_axis());
         let view = glm::identity();
         let clip2world = glm::inverse(&(projection * view));
 
         let objects_transforms = transforms(time);
         let reflective_object_pos = glm::vec3(0.0, -0.5, -10.0);
 
-        let cubemap_projection = glm::perspective(1.0, 90_f32.to_radians(), 0.1, 100.0);
-        let cubemap_clip2world = glm::inverse(&cubemap_projection);
-
-        cgl::bind_framebuffer(framebuffer, gl::FRAMEBUFFER);
-        cgl::draw_buffer(gl::TEXTURE_CUBE_MAP_POSITIVE_Z);
-        cgl::clear(gl::DEPTH_BUFFER_BIT);
+        // ------------ draw into cubemap ------------ //
         cgl::viewport(0, 0, res, res);
-        cgl::use_program(background_shader.program);
-        unsafe {
-            gl::UniformMatrix4fv(
-                background_shader.clip2world_location,
-                1,
-                0,
-                cubemap_clip2world.as_ptr(),
-            );
-        }
-        cgl::draw_arrays(gl::TRIANGLES, 0, 3);
-        let err = unsafe { gl::GetError() };
-        println!("{err}");
+        cgl::bind_texture(env_map, gl::TEXTURE_CUBE_MAP);
+        cgl::bind_framebuffer(framebuffer, gl::FRAMEBUFFER);
 
+        let cubemap_projection = glm::perspective(1.0, 90_f32.to_radians(), 0.1, 100.0);
+        let rotations = [
+            // right
+            glm::rotation(90.0_f32.to_radians(), &glm::Vec3::y_axis()),
+            // left
+            glm::rotation(-90.0_f32.to_radians(), &glm::Vec3::y_axis()),
+            // top
+            glm::rotation(90.0_f32.to_radians(), &glm::Vec3::x_axis()),
+            // bottom
+            glm::rotation(-90.0_f32.to_radians(), &glm::Vec3::x_axis()),
+            // front
+            glm::rotation(0.0, &glm::Vec3::y_axis()),
+            // back
+            glm::rotation(180.0_f32.to_radians(), &glm::Vec3::y_axis()),
+        ];
+
+        for (target, rot) in (gl::TEXTURE_CUBE_MAP_POSITIVE_X..=gl::TEXTURE_CUBE_MAP_NEGATIVE_Z)
+            .zip(rotations.iter())
+        {
+            let cubemap_clip2world = glm::inverse(&(cubemap_projection * rot));
+
+            let attachment = gl::COLOR_ATTACHMENT0 + (target - gl::TEXTURE_CUBE_MAP_POSITIVE_X);
+            cgl::draw_buffer(attachment);
+            cgl::clear(gl::DEPTH_BUFFER_BIT);
+
+            cgl::use_program(cubemap_background_shader.program);
+            unsafe {
+                gl::UniformMatrix4fv(
+                    cubemap_background_shader.clip2world_location,
+                    1,
+                    0,
+                    cubemap_clip2world.as_ptr(),
+                );
+            }
+
+            cgl::draw_arrays(gl::TRIANGLES, 0, 3);
+        }
+
+        // ------------
         cgl::bind_framebuffer(0, gl::FRAMEBUFFER);
         cgl::clear(gl::DEPTH_BUFFER_BIT);
         cgl::viewport(0, 0, width as i32, height as i32);
+
+        cgl::use_program(object_shader.program);
+        let model = glm::translation(&glm::vec3(0.0, 0.0, -10.0))
+            * glm::rotation(time, &glm::Vec3::x_axis());
+        let mvp = projection * view * model;
+        unsafe {
+            gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
+            gl::UniformMatrix4fv(object_shader.model_location, 1, 0, model.as_ptr());
+        }
+        cgl::utils::draw_mesh(&cube_mesh);
+
+        // for t in &objects_transforms[..] {
+        // }
 
         cgl::bind_texture(reflection_map, gl::TEXTURE_CUBE_MAP);
         cgl::use_program(background_shader.program);
@@ -169,6 +209,7 @@ fn main() {
         cgl::draw_arrays(gl::TRIANGLES, 0, 3);
 
         window.swap_buffers();
+
         // let rotations = [
         //     // right
         //     glm::rotation(90.0_f32.to_radians(), &glm::Vec3::y_axis()),
@@ -241,16 +282,6 @@ fn main() {
         // cgl::utils::draw_mesh(&cube_mesh);
 
         // draw common objects
-        // cgl::use_program(object_shader.program);
-
-        // for t in &objects_transforms[..] {
-        //     let mvp = projection * view * t;
-        //     unsafe {
-        //         gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
-        //         gl::UniformMatrix4fv(object_shader.model_location, 1, 0, t.as_ptr());
-        //     }
-        //     cgl::utils::draw_mesh(&icosphere_mesh);
-        // }
 
         // draw backgroung
     }
@@ -306,10 +337,10 @@ pub struct BackgroundShader {
 }
 
 impl BackgroundShader {
-    pub fn new() -> Self {
-        let vertex_shader_source = include_str!(r"..\environment_mapping\shaders\main.vert");
+    pub fn new(vert: &str) -> Self {
+        // let vert = include_str!(r"..\environment_mapping\shaders\main.vert");
         let fragment_shader_source = include_str!(r"..\environment_mapping\shaders\main.frag");
-        let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
+        let vert = cgl::compile_shader(gl::VERTEX_SHADER, vert).unwrap();
         let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
         let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
         let clip2world_location = cgl::get_location(program, "clip2world").unwrap();
