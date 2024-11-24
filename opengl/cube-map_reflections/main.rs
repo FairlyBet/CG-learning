@@ -46,11 +46,8 @@ fn main() {
     let icosphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\icosphere.glb");
 
     let reflective_object_shader = ReflectionObjShader::new();
-    let object_shader = ObjectShader::new(include_str!(r"shaders\main.vert"));
-    let background_shader =
-        BackgroundShader::new(include_str!(r"..\environment_mapping\shaders\main.vert"));
-    let cubemap_object_shader = ObjectShader::new(include_str!(r"shaders\cubemap_main.vert"));
-    let cubemap_background_shader = BackgroundShader::new(include_str!(r"shaders\to_cubemap.vert"));
+    let object_shader = ObjectShader::new();
+    let background_shader = BackgroundShader::new();
 
     let aspect = width as f32 / height as f32;
     let projection = glm::perspective(aspect, 45.0_f32.to_radians(), 0.1, 1000.0);
@@ -115,8 +112,8 @@ fn main() {
         glfw.poll_events();
 
         let time = glfw.get_time() as f32;
-        let view = glm::rotation(time * std::f32::consts::PI / 12.0, &glm::Vec3::y_axis());
-        // let view = glm::identity();
+        // let view = glm::rotation(time * std::f32::consts::PI / 12.0, &glm::Vec3::x_axis());
+        let view = glm::identity();
         let clip2world = glm::inverse(&(projection * view));
 
         let objects_transforms = transforms(time);
@@ -138,69 +135,83 @@ fn main() {
             // bottom
             glm::rotation(90.0_f32.to_radians(), &glm::Vec3::x_axis()),
             // front
-            glm::rotation(180.0_f32.to_radians(), &glm::Vec3::y_axis()),
-            // back
             glm::rotation(0.0, &glm::Vec3::y_axis()),
+            // back
+            glm::rotation(180.0_f32.to_radians(), &glm::Vec3::y_axis()),
         ];
+        // invert Y because cubemap has inverted V coordinate
+        let y_inverse = glm::scaling(&glm::vec3(1.0, -1.0, 1.0));
 
         for (target, rot) in (gl::TEXTURE_CUBE_MAP_POSITIVE_X..=gl::TEXTURE_CUBE_MAP_NEGATIVE_Z)
             .zip(rotations.iter())
         {
-            // glm::scaling(&glm::vec3(1.0, -1.0, 1.0)) *
-            let clip2world = glm::inverse(&(cubemap_projection * rot));
+            let clip2world = glm::inverse(&(y_inverse * cubemap_projection * rot));
             let view = rot * glm::translation(&(-reflective_object_pos));
 
             let attachment = gl::COLOR_ATTACHMENT0 + (target - gl::TEXTURE_CUBE_MAP_POSITIVE_X);
             cgl::draw_buffer(attachment);
             cgl::clear(gl::DEPTH_BUFFER_BIT);
 
-            // cgl::use_program(object_shader.program);
-            // for transform in &objects_transforms {
-            //     let mvp = cubemap_projection * view * transform;
-            //     unsafe {
-            //         gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
-            //         gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
-            //     }
-            //     cgl::utils::draw_mesh(&icosphere_mesh);
-            // }
+            cgl::use_program(object_shader.program);
+            for transform in &objects_transforms {
+                let mvp = y_inverse * cubemap_projection * view * transform;
+                unsafe {
+                    gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
+                    gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
+                }
+                cgl::utils::draw_mesh(&icosphere_mesh);
+            }
 
-            cgl::use_program(cubemap_background_shader.program);
+            cgl::use_program(background_shader.program);
             unsafe {
                 gl::UniformMatrix4fv(
-                    cubemap_background_shader.clip2world_location,
+                    background_shader.clip2world_location,
                     1,
                     0,
                     clip2world.as_ptr(),
                 );
             }
-
             cgl::draw_arrays(gl::TRIANGLES, 0, 3);
         }
 
-        // ------------ draw common obejcts ------------ //
         cgl::viewport(0, 0, width as i32, height as i32);
         cgl::bind_framebuffer(0, gl::FRAMEBUFFER);
         cgl::clear(gl::DEPTH_BUFFER_BIT);
 
-        // cgl::use_program(object_shader.program);
-        // for transform in &objects_transforms {
-        //     let mvp = projection * view * transform;
-        //     unsafe {
-        //         gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
-        //         gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
-        //     }
-        //     cgl::utils::draw_mesh(&icosphere_mesh);
-        // }
+        // ------------ draw common obejcts ------------ //
+        cgl::use_program(object_shader.program);
+        for transform in &objects_transforms {
+            let mvp = projection * view * transform;
+            unsafe {
+                gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
+                gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
+            }
+            cgl::utils::draw_mesh(&icosphere_mesh);
+        }
 
-        // let model = glm::translation(&reflective_object_pos);
-        // let mvp = projection * view * model;
-        // unsafe {
-        //     gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
-        //     gl::UniformMatrix4fv(object_shader.model_location, 1, 0, model.as_ptr());
-        // }
-        // cgl::utils::draw_mesh(&cube_mesh);
-
+        // ------------ draw reflective obejct ------------ //
         cgl::bind_texture(reflection_map, gl::TEXTURE_CUBE_MAP);
+        cgl::use_program(reflective_object_shader.program);
+        let model = glm::translation(&reflective_object_pos);
+        let mvp = projection * view * model;
+        unsafe {
+            gl::UniformMatrix4fv(reflective_object_shader.mvp_location, 1, 0, mvp.as_ptr());
+            gl::UniformMatrix4fv(
+                reflective_object_shader.model_location,
+                1,
+                0,
+                model.as_ptr(),
+            );
+            gl::Uniform3fv(
+                reflective_object_shader.model_location,
+                1,
+                glm::vec3(0.0, 0.0, 0.0).as_ptr(),
+            );
+        }
+        cgl::utils::draw_mesh(&cube_mesh);
+
+        // ------------ draw background ------------ //
+        cgl::bind_texture(env_map, gl::TEXTURE_CUBE_MAP);
         cgl::use_program(background_shader.program);
         unsafe {
             gl::UniformMatrix4fv(
@@ -213,59 +224,6 @@ fn main() {
         cgl::draw_arrays(gl::TRIANGLES, 0, 3);
 
         window.swap_buffers();
-
-        // for (target, rot) in (gl::TEXTURE_CUBE_MAP_POSITIVE_X..=gl::TEXTURE_CUBE_MAP_NEGATIVE_Z)
-        //     .zip(rotations.iter())
-        // {
-        //     let view_projection =
-        //         cubemap_projection * rot * glm::translation(&-reflective_object_pos);
-        //     let clip2world = glm::inverse(&(cubemap_projection * rot));
-        //     let attachment = gl::COLOR_ATTACHMENT0 + (target - gl::TEXTURE_CUBE_MAP_POSITIVE_X);
-
-        //     cgl::draw_buffer(attachment);
-        //     cgl::clear(gl::DEPTH_BUFFER_BIT);
-
-        // cgl::use_program(object_shader.program);
-
-        // for t in &objects_transforms {
-        //     let mvp = view_projection * t;
-        //     unsafe {
-        //         gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
-        //         gl::UniformMatrix4fv(object_shader.model_location, 1, 0, t.as_ptr());
-        //     }
-        //     cgl::utils::draw_mesh(&icosphere_mesh);
-        // }
-
-        //     cgl::use_program(background_shader.program);
-        //     unsafe {
-        //         gl::UniformMatrix4fv(
-        //             background_shader.clip2world_location,
-        //             1,
-        //             0,
-        //             clip2world.as_ptr(),
-        //         );
-        //     }
-        //     cgl::draw_arrays(gl::TRIANGLES, 0, 3);
-        // }
-
-        // draw reflective object
-        // let angle = time * std::f32::consts::PI / 15.0;
-        // let angle = 0.0;
-        // let model =
-        //     glm::translation(&reflective_object_pos) * glm::rotation(angle, &glm::Vec3::y_axis());
-        // let mvp = projection * view * model;
-        // cgl::bind_texture(reflection_map, gl::TEXTURE_CUBE_MAP);
-        // cgl::use_program(reflection_shader.program);
-        // unsafe {
-        //     gl::UniformMatrix4fv(reflection_shader.mvp_location, 1, 0, mvp.as_ptr());
-        //     gl::UniformMatrix4fv(reflection_shader.model_location, 1, 0, model.as_ptr());
-        //     gl::Uniform3f(reflection_shader.eye_location, 0.0, 0.0, 0.0);
-        // }
-        // cgl::utils::draw_mesh(&cube_mesh);
-
-        // draw common objects
-
-        // draw backgroung
     }
 }
 
@@ -319,8 +277,8 @@ pub struct BackgroundShader {
 }
 
 impl BackgroundShader {
-    pub fn new(vert: &str) -> Self {
-        // let vert = include_str!(r"..\environment_mapping\shaders\main.vert");
+    pub fn new() -> Self {
+        let vert = include_str!(r"..\environment_mapping\shaders\main.vert");
         let fragment_shader_source = include_str!(r"..\environment_mapping\shaders\main.frag");
         let vert = cgl::compile_shader(gl::VERTEX_SHADER, vert).unwrap();
         let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
@@ -341,10 +299,10 @@ pub struct ObjectShader {
 }
 
 impl ObjectShader {
-    pub fn new(vert: &str) -> Self {
-        // let vertex_shader_source = include_str!(r"shaders\main.vert");
+    pub fn new() -> Self {
+        let vertex_shader_source = include_str!(r"shaders\main.vert");
         let fragment_shader_source = include_str!(r"shaders\main.frag");
-        let vert = cgl::compile_shader(gl::VERTEX_SHADER, vert).unwrap();
+        let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
         let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
         let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
         let mvp_location = cgl::get_location(program, "mvp").unwrap();

@@ -82,7 +82,7 @@ fn main() {
         glfw.poll_events();
         
         let angle = glfw.get_time() as f32 * std::f32::consts::PI / 12.0;
-        let rotation = glm::rotation(angle, &glm::Vec3::x_axis());
+        let rotation = glm::rotation(angle, &glm::Vec3::y_axis());
         // let rotation = glm::rotation(30.0_f32.to_radians(), &glm::Vec3::y_axis());
         let mvp = projection * rotation;
         let clip2world = mvp.try_inverse().unwrap();
