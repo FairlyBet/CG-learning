@@ -14,6 +14,6 @@ void main()
     );
     vec2 position = POSITIONS[ gl_VertexID ];
     v_texcoord = ( clip2world * vec4( position, 1.0, 1.0 ) ).xyz;
-    v_texcoord.z = -v_texcoord.z;
+    // v_texcoord.z = -v_texcoord.z;
     gl_Position = vec4( position, 0.999, 1.0 );
 }
