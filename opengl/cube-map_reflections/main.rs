@@ -48,6 +48,7 @@ fn main() {
     let reflective_object_shader = ReflectionObjShader::new();
     let object_shader = ObjectShader::new();
     let background_shader = BackgroundShader::new();
+    let robj_shader = RObjectShader::new();
 
     let aspect = width as f32 / height as f32;
     let projection = glm::perspective(aspect, 45.0_f32.to_radians(), 0.1, 1000.0);
@@ -124,7 +125,7 @@ fn main() {
         cgl::bind_texture(env_map, gl::TEXTURE_CUBE_MAP);
         cgl::bind_framebuffer(framebuffer, gl::FRAMEBUFFER);
 
-        let cubemap_projection = glm::perspective(1.0, 90_f32.to_radians(), 0.1, 100.0);
+        let cubemap_projection = glm::perspective(1.0, 90_f32.to_radians(), 0.5, 100.0);
         let rotations = [
             // right
             glm::rotation(90.0_f32.to_radians(), &glm::Vec3::y_axis()),
@@ -152,12 +153,12 @@ fn main() {
             cgl::draw_buffer(attachment);
             cgl::clear(gl::DEPTH_BUFFER_BIT);
 
-            cgl::use_program(object_shader.program);
+            cgl::use_program(robj_shader.program);
             for transform in &objects_transforms {
                 let mvp = y_inverse * cubemap_projection * view * transform;
                 unsafe {
-                    gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
-                    gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
+                    gl::UniformMatrix4fv(robj_shader.mvp_location, 1, 0, mvp.as_ptr());
+                    gl::UniformMatrix4fv(robj_shader.model_location, 1, 0, transform.as_ptr());
                 }
                 cgl::utils::draw_mesh(&icosphere_mesh);
             }
@@ -234,9 +235,9 @@ fn transforms(time: f32) -> Vec<glm::Mat4> {
     let center = glm::vec3(0.0, -1.0, -10.0);
     for i in 0..num {
         let angle =
-            time * std::f32::consts::FRAC_PI_3 + std::f32::consts::PI * 2.0 / num as f32 * i as f32;
-        let x = angle.sin() * 3.0;
-        let z = angle.cos() * 3.0;
+            time * std::f32::consts::FRAC_PI_6 + std::f32::consts::PI * 2.0 / num as f32 * i as f32;
+        let x = angle.sin() * 5.0;
+        let z = angle.cos() * 5.0;
 
         let position = center + glm::vec3(x, 0.0, z);
         ret.push(glm::translation(&position) * scale);
@@ -312,6 +313,34 @@ impl ObjectShader {
             program,
             mvp_location,
             model_location,
+        }
+    }
+}
+
+pub struct RObjectShader {
+    pub program: u32,
+    pub mvp_location: i32,
+    pub model_location: i32,
+    pub camera_mvp_location: i32,
+}
+
+impl RObjectShader {
+    pub fn new() -> Self {
+        let vertex_shader_source = include_str!(r"shaders\refl.vert");
+        println!("{vertex_shader_source}");
+        let fragment_shader_source = include_str!(r"shaders\main.frag");
+        let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
+        let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
+        let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
+        let mvp_location = cgl::get_location(program, "mvp").unwrap();
+        let model_location = cgl::get_location(program, "model").unwrap();
+        let camera_mvp_location = cgl::get_location(program, "camera_mvp").unwrap();
+
+        Self {
+            program,
+            mvp_location,
+            model_location,
+            camera_mvp_location,
         }
     }
 }
