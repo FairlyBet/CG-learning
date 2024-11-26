@@ -44,11 +44,12 @@ fn main() {
 
     let cube_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\cube.glb");
     let icosphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\icosphere.glb");
+    let sphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\sphere.glb");
 
     let reflective_object_shader = ReflectionObjShader::new();
     let object_shader = ObjectShader::new();
     let background_shader = BackgroundShader::new();
-    let robj_shader = RObjectShader::new();
+    // let robj_shader = ObjectShader::new();
 
     let aspect = width as f32 / height as f32;
     let projection = glm::perspective(aspect, 45.0_f32.to_radians(), 0.1, 1000.0);
@@ -153,14 +154,14 @@ fn main() {
             cgl::draw_buffer(attachment);
             cgl::clear(gl::DEPTH_BUFFER_BIT);
 
-            cgl::use_program(robj_shader.program);
+            cgl::use_program(object_shader.program);
             for transform in &objects_transforms {
                 let mvp = y_inverse * cubemap_projection * view * transform;
                 unsafe {
-                    gl::UniformMatrix4fv(robj_shader.mvp_location, 1, 0, mvp.as_ptr());
-                    gl::UniformMatrix4fv(robj_shader.model_location, 1, 0, transform.as_ptr());
+                    gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
+                    gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
                 }
-                cgl::utils::draw_mesh(&icosphere_mesh);
+                cgl::utils::draw_mesh(&cube_mesh);
             }
 
             cgl::use_program(background_shader.program);
@@ -187,11 +188,14 @@ fn main() {
                 gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
                 gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
             }
-            cgl::utils::draw_mesh(&icosphere_mesh);
+            cgl::utils::draw_mesh(&cube_mesh);
         }
 
         // ------------ draw reflective obejct ------------ //
         cgl::bind_texture(reflection_map, gl::TEXTURE_CUBE_MAP);
+        cgl::generate_mipmaps(gl::TEXTURE_CUBE_MAP);
+        cgl::texture_parameter(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
+    
         cgl::use_program(reflective_object_shader.program);
         let model = glm::translation(&reflective_object_pos);
         let mvp = projection * view * model;
@@ -209,7 +213,7 @@ fn main() {
                 glm::vec3(0.0, 0.0, 0.0).as_ptr(),
             );
         }
-        cgl::utils::draw_mesh(&cube_mesh);
+        cgl::utils::draw_mesh(&sphere_mesh);
 
         // ------------ draw background ------------ //
         cgl::bind_texture(env_map, gl::TEXTURE_CUBE_MAP);
@@ -236,8 +240,8 @@ fn transforms(time: f32) -> Vec<glm::Mat4> {
     for i in 0..num {
         let angle =
             time * std::f32::consts::FRAC_PI_6 + std::f32::consts::PI * 2.0 / num as f32 * i as f32;
-        let x = angle.sin() * 5.0;
-        let z = angle.cos() * 5.0;
+        let x = angle.sin() * 3.0;
+        let z = angle.cos() * 3.0;
 
         let position = center + glm::vec3(x, 0.0, z);
         ret.push(glm::translation(&position) * scale);
@@ -313,34 +317,6 @@ impl ObjectShader {
             program,
             mvp_location,
             model_location,
-        }
-    }
-}
-
-pub struct RObjectShader {
-    pub program: u32,
-    pub mvp_location: i32,
-    pub model_location: i32,
-    pub camera_mvp_location: i32,
-}
-
-impl RObjectShader {
-    pub fn new() -> Self {
-        let vertex_shader_source = include_str!(r"shaders\refl.vert");
-        println!("{vertex_shader_source}");
-        let fragment_shader_source = include_str!(r"shaders\main.frag");
-        let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
-        let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
-        let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
-        let mvp_location = cgl::get_location(program, "mvp").unwrap();
-        let model_location = cgl::get_location(program, "model").unwrap();
-        let camera_mvp_location = cgl::get_location(program, "camera_mvp").unwrap();
-
-        Self {
-            program,
-            mvp_location,
-            model_location,
-            camera_mvp_location,
         }
     }
 }
