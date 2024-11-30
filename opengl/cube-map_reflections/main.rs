@@ -43,13 +43,11 @@ fn main() {
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
     let cube_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\cube.glb");
-    let icosphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\icosphere.glb");
     let sphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\sphere.glb");
 
-    let reflective_object_shader = ReflectionObjShader::new();
+    let reflective_object_shader = ReflectiveObjectShader::new();
     let object_shader = ObjectShader::new();
     let background_shader = BackgroundShader::new();
-    // let robj_shader = ObjectShader::new();
 
     let aspect = width as f32 / height as f32;
     let projection = glm::perspective(aspect, 45.0_f32.to_radians(), 0.1, 1000.0);
@@ -114,17 +112,16 @@ fn main() {
         glfw.poll_events();
 
         let time = glfw.get_time() as f32;
-        // let view = glm::rotation(time * std::f32::consts::PI / 12.0, &glm::Vec3::x_axis());
         let view = glm::identity();
         let clip2world = glm::inverse(&(projection * view));
 
         let objects_transforms = transforms(time);
-        let reflective_object_pos = glm::vec3(0.0, -0.5, -10.0);
+        let reflective_object_pos = glm::vec3(0.0, -0.5, -5.0);
 
-        // ------------ draw into cubemap ------------ //
+        // ------------ draw reflection cubemap ------------ //
         cgl::viewport(0, 0, res, res);
         cgl::bind_texture(env_map, gl::TEXTURE_CUBE_MAP);
-        cgl::bind_framebuffer(framebuffer, gl::FRAMEBUFFER);
+        cgl::bind_framebuffer(framebuffer, gl::DRAW_FRAMEBUFFER);
 
         let cubemap_projection = glm::perspective(1.0, 90_f32.to_radians(), 0.5, 100.0);
         let rotations = [
@@ -194,8 +191,11 @@ fn main() {
         // ------------ draw reflective obejct ------------ //
         cgl::bind_texture(reflection_map, gl::TEXTURE_CUBE_MAP);
         cgl::generate_mipmaps(gl::TEXTURE_CUBE_MAP);
-        cgl::texture_parameter(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR);
-    
+        cgl::texture_parameter(
+            gl::TEXTURE_CUBE_MAP,
+            gl::TEXTURE_MIN_FILTER,
+            gl::LINEAR_MIPMAP_LINEAR,
+        );
         cgl::use_program(reflective_object_shader.program);
         let model = glm::translation(&reflective_object_pos);
         let mvp = projection * view * model;
@@ -236,7 +236,7 @@ fn transforms(time: f32) -> Vec<glm::Mat4> {
     let scale = glm::scaling(&glm::Vec3::from_element(0.5));
     let num = 5;
     let mut ret = vec![];
-    let center = glm::vec3(0.0, -1.0, -10.0);
+    let center = glm::vec3(0.0, -1.0, -5.0);
     for i in 0..num {
         let angle =
             time * std::f32::consts::FRAC_PI_6 + std::f32::consts::PI * 2.0 / num as f32 * i as f32;
@@ -249,14 +249,14 @@ fn transforms(time: f32) -> Vec<glm::Mat4> {
     ret
 }
 
-pub struct ReflectionObjShader {
+pub struct ReflectiveObjectShader {
     pub program: u32,
     pub mvp_location: i32,
     pub model_location: i32,
     pub eye_location: i32,
 }
 
-impl ReflectionObjShader {
+impl ReflectiveObjectShader {
     pub fn new() -> Self {
         let vertex_shader_source = include_str!(r"shaders\main.vert");
         let fragment_shader_source = include_str!(r"shaders\reflection.frag");
