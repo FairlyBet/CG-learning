@@ -138,13 +138,13 @@ fn main() {
             // back
             glm::rotation(180.0_f32.to_radians(), &glm::Vec3::y_axis()),
         ];
-        // invert Y because cubemap has inverted V coordinate
-        let y_inverse = glm::scaling(&glm::vec3(1.0, -1.0, 1.0));
+        // invert Y sign because cubemap has flipped V coordinate
+        let y_flip = glm::scaling(&glm::vec3(1.0, -1.0, 1.0));
 
         for (target, rot) in (gl::TEXTURE_CUBE_MAP_POSITIVE_X..=gl::TEXTURE_CUBE_MAP_NEGATIVE_Z)
             .zip(rotations.iter())
         {
-            let clip2world = glm::inverse(&(y_inverse * cubemap_projection * rot));
+            let clip2world = glm::inverse(&(y_flip * cubemap_projection * rot));
             let view = rot * glm::translation(&(-reflective_object_pos));
 
             let attachment = gl::COLOR_ATTACHMENT0 + (target - gl::TEXTURE_CUBE_MAP_POSITIVE_X);
@@ -153,7 +153,7 @@ fn main() {
 
             cgl::use_program(object_shader.program);
             for transform in &objects_transforms {
-                let mvp = y_inverse * cubemap_projection * view * transform;
+                let mvp = y_flip * cubemap_projection * view * transform;
                 unsafe {
                     gl::UniformMatrix4fv(object_shader.mvp_location, 1, 0, mvp.as_ptr());
                     gl::UniformMatrix4fv(object_shader.model_location, 1, 0, transform.as_ptr());
