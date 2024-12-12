@@ -15,8 +15,8 @@ fn main() {
     gl::load_with(|symbol| window.get_proc_address(symbol));
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
-    let vertex_shader_source = include_str!("shaders/main.vert");
-    let fragment_shader_source = include_str!("shaders/main.frag");
+    let vertex_shader_source = include_str!(r"..\shaders\cubemap_background.vert");
+    let fragment_shader_source = include_str!(r"..\shaders\cubemap_background.frag");
     let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
     let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
     let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
@@ -28,27 +28,27 @@ fn main() {
 
     let images = [
         (
-            image::open(r"environment_mapping\skybox\front.jpg").unwrap(),
+            image::open(r"assets\skybox\front.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_Z,
         ),
         (
-            image::open(r"environment_mapping\skybox\back.jpg").unwrap(),
+            image::open(r"assets\skybox\back.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_Z,
         ),
         (
-            image::open(r"environment_mapping\skybox\left.jpg").unwrap(),
+            image::open(r"assets\skybox\left.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_X,
         ),
         (
-            image::open(r"environment_mapping\skybox\right.jpg").unwrap(),
+            image::open(r"assets\skybox\right.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_X,
         ),
         (
-            image::open(r"environment_mapping\skybox\top.jpg").unwrap(),
+            image::open(r"assets\skybox\top.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_Y,
         ),
         (
-            image::open(r"environment_mapping\skybox\bottom.jpg").unwrap(),
+            image::open(r"assets\skybox\bottom.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_Y,
         ),
     ];
@@ -80,7 +80,7 @@ fn main() {
 
     while !window.should_close() {
         glfw.poll_events();
-        
+
         let angle = glfw.get_time() as f32 * std::f32::consts::PI / 12.0;
         let rotation = glm::rotation(angle, &glm::Vec3::y_axis());
         // let rotation = glm::rotation(30.0_f32.to_radians(), &glm::Vec3::y_axis());

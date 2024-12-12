@@ -4,27 +4,27 @@ use nalgebra_glm as glm;
 fn main() {
     let images = [
         (
-            image::open(r"environment_mapping\skybox\front.jpg").unwrap(),
+            image::open(r"assets\skybox\front.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_Z,
         ),
         (
-            image::open(r"environment_mapping\skybox\back.jpg").unwrap(),
+            image::open(r"assets\skybox\back.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_Z,
         ),
         (
-            image::open(r"environment_mapping\skybox\left.jpg").unwrap(),
+            image::open(r"assets\skybox\left.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_X,
         ),
         (
-            image::open(r"environment_mapping\skybox\right.jpg").unwrap(),
+            image::open(r"assets\skybox\right.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_X,
         ),
         (
-            image::open(r"environment_mapping\skybox\top.jpg").unwrap(),
+            image::open(r"assets\skybox\top.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_Y,
         ),
         (
-            image::open(r"environment_mapping\skybox\bottom.jpg").unwrap(),
+            image::open(r"assets\skybox\bottom.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_Y,
         ),
     ];
@@ -42,8 +42,8 @@ fn main() {
     gl::load_with(|symbol| window.get_proc_address(symbol));
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
-    let cube_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\cube.glb");
-    let sphere_mesh = cgl::utils::load_mesh(r"cube-map_reflections\assets\sphere.glb");
+    let cube_mesh = cgl::utils::load_mesh(r"assets\cube.glb");
+    let sphere_mesh = cgl::utils::load_mesh(r"assets\sphere.glb");
 
     let reflective_object_shader = ReflectiveObjectShader::new();
     let object_shader = ObjectShader::new();
@@ -258,8 +258,8 @@ pub struct ReflectiveObjectShader {
 
 impl ReflectiveObjectShader {
     pub fn new() -> Self {
-        let vertex_shader_source = include_str!(r"shaders\main.vert");
-        let fragment_shader_source = include_str!(r"shaders\reflection.frag");
+        let vertex_shader_source = include_str!(r"..\shaders\pos_norm.vert");
+        let fragment_shader_source = include_str!(r"..\shaders\cubemap_reflection.frag");
         let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
         let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
         let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
@@ -283,8 +283,8 @@ pub struct BackgroundShader {
 
 impl BackgroundShader {
     pub fn new() -> Self {
-        let vert = include_str!(r"..\environment_mapping\shaders\main.vert");
-        let fragment_shader_source = include_str!(r"..\environment_mapping\shaders\main.frag");
+        let vert = include_str!(r"..\shaders\cubemap_background.vert");
+        let fragment_shader_source = include_str!(r"..\shaders\cubemap_background.frag");
         let vert = cgl::compile_shader(gl::VERTEX_SHADER, vert).unwrap();
         let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
         let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
@@ -305,8 +305,8 @@ pub struct ObjectShader {
 
 impl ObjectShader {
     pub fn new() -> Self {
-        let vertex_shader_source = include_str!(r"shaders\main.vert");
-        let fragment_shader_source = include_str!(r"shaders\main.frag");
+        let vertex_shader_source = include_str!(r"..\shaders\pos_norm.vert");
+        let fragment_shader_source = include_str!(r"..\shaders\fixed_pointlight1.frag");
         let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
         let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
         let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
