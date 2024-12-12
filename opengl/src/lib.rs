@@ -1,6 +1,6 @@
-pub mod utils;
 pub mod camera;
 pub mod transform;
+pub mod utils;
 
 pub fn clear(mask: u32) {
     unsafe {
@@ -50,6 +50,12 @@ pub fn draw_elements(mode: u32, count: i32, offset: usize, r#type: u32) {
 pub fn enable(cap: u32) {
     unsafe {
         gl::Enable(cap);
+    }
+}
+
+pub fn disable(cap: u32) {
+    unsafe {
+        gl::Disable(cap);
     }
 }
 
@@ -216,6 +222,12 @@ pub fn draw_buffers(buffers: &[u32]) {
     }
 }
 
+pub fn read_buffer(buffer: u32) {
+    unsafe {
+        gl::ReadBuffer(buffer);
+    }
+}
+
 pub fn texture_storage2d(target: u32, levels: i32, format: u32, mut width: i32, mut height: i32) {
     for level in 0..levels {
         unsafe {
@@ -295,5 +307,11 @@ pub fn renderbuffer_storage(target: u32, internalformat: u32, width: i32, height
 pub fn generate_mipmaps(target: u32) {
     unsafe {
         gl::GenerateMipmap(target);
+    }
+}
+
+pub fn get_error() -> u32 {
+    unsafe {
+        gl::GetError()
     }
 }

@@ -9,7 +9,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new_perspective(aspect: f32, fovy: f32, near: f32, far: f32) -> Self {
+    pub fn with_perspective(aspect: f32, fovy: f32, near: f32, far: f32) -> Self {
         Self {
             transform: Default::default(),
             projection: glm::perspective(aspect, fovy, near, far),
