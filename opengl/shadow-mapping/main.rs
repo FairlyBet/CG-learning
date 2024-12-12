@@ -19,9 +19,5 @@ fn main() {
     let cube_mesh = utils::load_mesh(r"assets\cube.glb");
     let sphere_mesh = utils::load_mesh(r"assets\sphere.glb");
 
-    let mut transform = Transform::new();
-    transform.rotate(&glm::vec3(0.0, 90.0, 0.0));
-
-    println!("{}", glm::inverse(&glm::quat_to_mat4(&transform.rotation)));
-    println!("{}", glm::quat_to_mat4(&-transform.rotation));
+    
 }

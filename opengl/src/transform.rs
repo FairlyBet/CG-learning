@@ -1,7 +1,7 @@
 use glm::{Mat4, Vec3};
 use nalgebra_glm as glm;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Transform {
     pub position: Vec3,
     pub rotation: glm::Quat,
@@ -14,7 +14,7 @@ impl Transform {
     }
 
     pub fn view(&self) -> Mat4 {
-        glm::quat_to_mat4(&self.rotation) * glm::translation(&-self.position)
+        glm::quat_to_mat4(&glm::quat_inverse(&self.rotation)) * glm::translation(&-self.position)
     }
 
     pub fn model(&self) -> Mat4 {
@@ -58,5 +58,15 @@ impl Transform {
         let local_forward = glm::quat_rotate_vec3(&self.rotation, &Vec3::z_axis());
 
         (local_right, local_up, local_forward)
+    }
+}
+
+impl Default for Transform {
+    fn default() -> Self {
+        Self {
+            position: Default::default(),
+            rotation: glm::quat_identity(),
+            scale: Default::default(),
+        }
     }
 }
