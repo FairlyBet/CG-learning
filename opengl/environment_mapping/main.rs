@@ -15,8 +15,8 @@ fn main() {
     gl::load_with(|symbol| window.get_proc_address(symbol));
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
-    let vertex_shader_source = include_str!(r"..\shaders\cubemap_background.vert");
-    let fragment_shader_source = include_str!(r"..\shaders\cubemap_background.frag");
+    let vertex_shader_source = include_str!("../shaders/cubemap_background.vert");
+    let fragment_shader_source = include_str!("../shaders/cubemap_background.frag");
     let vert = cgl::compile_shader(gl::VERTEX_SHADER, vertex_shader_source).unwrap();
     let frag = cgl::compile_shader(gl::FRAGMENT_SHADER, fragment_shader_source).unwrap();
     let program = cgl::create_vert_frag_prog(vert, frag).unwrap();
@@ -28,27 +28,27 @@ fn main() {
 
     let images = [
         (
-            image::open(r"assets\skybox\front.jpg").unwrap(),
+            image::open("assets/skybox/front.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_Z,
         ),
         (
-            image::open(r"assets\skybox\back.jpg").unwrap(),
+            image::open("assets/skybox/back.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_Z,
         ),
         (
-            image::open(r"assets\skybox\left.jpg").unwrap(),
+            image::open("assets/skybox/left.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_X,
         ),
         (
-            image::open(r"assets\skybox\right.jpg").unwrap(),
+            image::open("assets/skybox/right.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_X,
         ),
         (
-            image::open(r"assets\skybox\top.jpg").unwrap(),
+            image::open("assets/skybox/top.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_POSITIVE_Y,
         ),
         (
-            image::open(r"assets\skybox\bottom.jpg").unwrap(),
+            image::open("assets/skybox/bottom.jpg").unwrap(),
             gl::TEXTURE_CUBE_MAP_NEGATIVE_Y,
         ),
     ];

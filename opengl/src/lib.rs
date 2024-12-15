@@ -311,7 +311,5 @@ pub fn generate_mipmaps(target: u32) {
 }
 
 pub fn get_error() -> u32 {
-    unsafe {
-        gl::GetError()
-    }
+    unsafe { gl::GetError() }
 }

@@ -66,7 +66,7 @@ impl Default for Transform {
         Self {
             position: Default::default(),
             rotation: glm::quat_identity(),
-            scale: Default::default(),
+            scale: glm::vec3(1.0, 1.0, 1.0),
         }
     }
 }
