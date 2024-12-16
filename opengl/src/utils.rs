@@ -31,24 +31,22 @@ pub fn load_mesh(path: &str) -> Vec<(u32, i32)> {
             gl::EnableVertexAttribArray(1);
         }
 
-        if let Some(texcoords) = mesh.texture_coords.first() {
-            if let Some(texcoords) = texcoords {
-                let texcoords: Box<[_]> = texcoords
-                    .into_iter()
-                    .map(|item| russimp::Vector2D {
-                        x: item.x,
-                        y: item.y,
-                    })
-                    .collect();
+        if let Some(Some(texcoords)) = mesh.texture_coords.first() {
+            let texcoords: Box<[_]> = texcoords
+                .iter()
+                .map(|item| russimp::Vector2D {
+                    x: item.x,
+                    y: item.y,
+                })
+                .collect();
 
-                let texcoord_buffer = crate::create_buffer().unwrap();
-                crate::bind_buffer(texcoord_buffer, gl::ARRAY_BUFFER);
-                crate::buffer_data(gl::ARRAY_BUFFER, &texcoords, gl::STATIC_DRAW);
+            let texcoord_buffer = crate::create_buffer().unwrap();
+            crate::bind_buffer(texcoord_buffer, gl::ARRAY_BUFFER);
+            crate::buffer_data(gl::ARRAY_BUFFER, &texcoords, gl::STATIC_DRAW);
 
-                unsafe {
-                    gl::VertexAttribPointer(2, 2, gl::FLOAT, 0, 0, std::ptr::null());
-                    gl::EnableVertexAttribArray(2);
-                }
+            unsafe {
+                gl::VertexAttribPointer(2, 2, gl::FLOAT, 0, 0, std::ptr::null());
+                gl::EnableVertexAttribArray(2);
             }
         }
 
