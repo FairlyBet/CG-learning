@@ -73,7 +73,7 @@ fn main() {
         ),
         (
             Transform {
-                position: glm::vec3(0.0, 0.0, 0.0),
+                position: glm::vec3(0.0, -1.5, -1.5),
                 ..Default::default()
             },
             &cube_mesh,
@@ -97,7 +97,7 @@ fn main() {
     unsafe {
         gl::DepthFunc(gl::LESS);
     }
-    let light = Camera::with_perspective(1.0, 90.0_f32.to_radians(), 0.1, 100.0);
+    let light = Camera::with_perspective(1.0, 90.0_f32.to_radians(), 0.5, 1000.0);
     // light.transform.position.z -= 7.0;
 
     while !window.should_close() {
