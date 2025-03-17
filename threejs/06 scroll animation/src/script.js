@@ -1,16 +1,18 @@
 import * as THREE from 'three'
 import GUI from 'lil-gui'
 
+
 /**
  * Debug
  */
 const gui = new GUI()
 
 const parameters = {
-    materialColor: '#ffeded'
+    materialColor: '#a44646'
 }
 
-gui.addColor(parameters, 'materialColor').onChange(() => { meshMaterial.color.set(parameters.materialColor) })
+gui.addColor(parameters, 'materialColor').onChange(() => { meshMaterial.color.set(parameters.materialColor); particlesMaterial.color.set(parameters.materialColor) })
+
 
 /**
  * Base
@@ -33,7 +35,7 @@ const mesh1 = new THREE.Mesh(
 )
 
 const mesh2 = new THREE.Mesh(
-    new THREE.ConeGeometry(1, 2, 32),
+    new THREE.ConeGeometry(1, 2, 64),
     meshMaterial
 )
 
@@ -42,11 +44,43 @@ const mesh3 = new THREE.Mesh(
     meshMaterial
 )
 
+
 scene.add(mesh1, mesh2, mesh3)
+const objectDistance = 4
+mesh1.position.y = -objectDistance * 0;
+mesh2.position.y = -objectDistance * 1;
+mesh3.position.y = -objectDistance * 2;
+mesh1.position.x = 2;
+mesh2.position.x = -2;
+mesh3.position.x = 2;
+
+
+const sectionMeshes = [mesh1, mesh2, mesh3]
+
+
+const particlesCount = 200
+const positions = new Float32Array(particlesCount * 3)
+for (let i = 0; i < particlesCount; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 10
+    positions[i * 3 + 1] = objectDistance * 0.5 - Math.random() * objectDistance * sectionMeshes.length
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 10
+}
+const particlesGeometry = new THREE.BufferGeometry()
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+
+const particlesMaterial = new THREE.PointsMaterial({
+    color: parameters.materialColor,
+    sizeAttenuation: true,
+    size: 0.03
+})
+
+const particles = new THREE.Points(particlesGeometry, particlesMaterial)
+scene.add(particles)
 
 const light = new THREE.DirectionalLight('#ffffff', 3)
 light.position.set(2, 5, 2)
 scene.add(light)
+
 
 /**
  * Sizes
@@ -70,13 +104,17 @@ window.addEventListener('resize', () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
+
 /**
  * Camera
  */
 // Base camera
+const cameraGroup = new THREE.Group()
+scene.add(cameraGroup)
 const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 100)
 camera.position.z = 6
-scene.add(camera)
+cameraGroup.add(camera)
+
 
 /**
  * Renderer
@@ -88,19 +126,45 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
+
 /**
  * Animate
  */
 const clock = new THREE.Clock()
+let time = 0
+let scroll = window.scrollY
+window.addEventListener('scroll', () => {
+    scroll = window.scrollY
+})
 
-const tick = () => {
+const cursor = { x: 0, y: 0 }
+window.addEventListener('mousemove', (event) => {
+    cursor.x = event.clientX / sizes.width - 0.5
+    cursor.y = event.clientY / sizes.height - 0.5
+})
+
+const update = () => {
     const elapsedTime = clock.getElapsedTime()
+    const deltaTime = elapsedTime - time
+    time = elapsedTime
+
+    camera.position.y = -scroll / sizes.height * objectDistance
+
+    const parallaxX = cursor.x
+    const parallaxY = -cursor.y
+    cameraGroup.position.x += (parallaxX - cameraGroup.position.x) * deltaTime
+    cameraGroup.position.y += (parallaxY - cameraGroup.position.y) * deltaTime
+
+    for (const mesh of sectionMeshes) {
+        mesh.rotation.x = elapsedTime * 0.2
+        mesh.rotation.y = elapsedTime * 0.23
+    }
 
     // Render
     renderer.render(scene, camera)
 
     // Call tick again on the next frame
-    window.requestAnimationFrame(tick)
+    window.requestAnimationFrame(update)
 }
 
-tick()
+update()
