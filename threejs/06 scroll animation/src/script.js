@@ -1,10 +1,8 @@
 import * as THREE from 'three'
 import GUI from 'lil-gui'
+import gsap from 'gsap'
 
 
-/**
- * Debug
- */
 const gui = new GUI()
 
 const parameters = {
@@ -14,9 +12,6 @@ const parameters = {
 gui.addColor(parameters, 'materialColor').onChange(() => { meshMaterial.color.set(parameters.materialColor); particlesMaterial.color.set(parameters.materialColor) })
 
 
-/**
- * Base
- */
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
@@ -82,9 +77,6 @@ light.position.set(2, 5, 2)
 scene.add(light)
 
 
-/**
- * Sizes
- */
 const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
@@ -133,8 +125,14 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 const clock = new THREE.Clock()
 let time = 0
 let scroll = window.scrollY
+let currentSection = 0
 window.addEventListener('scroll', () => {
     scroll = window.scrollY
+    const newSection = Math.round(scroll / sizes.height)
+    if (newSection != currentSection) {
+        currentSection = newSection
+        gsap.to(sectionMeshes[currentSection].rotation, { duration: 1.5, ease: 'power2.inOut', x: '+=6', y: '+=3', z: '+=1.5' })
+    }
 })
 
 const cursor = { x: 0, y: 0 }
@@ -142,6 +140,7 @@ window.addEventListener('mousemove', (event) => {
     cursor.x = event.clientX / sizes.width - 0.5
     cursor.y = event.clientY / sizes.height - 0.5
 })
+
 
 const update = () => {
     const elapsedTime = clock.getElapsedTime()
@@ -156,8 +155,8 @@ const update = () => {
     cameraGroup.position.y += (parallaxY - cameraGroup.position.y) * deltaTime
 
     for (const mesh of sectionMeshes) {
-        mesh.rotation.x = elapsedTime * 0.2
-        mesh.rotation.y = elapsedTime * 0.23
+        mesh.rotation.x += deltaTime * 0.2
+        mesh.rotation.y += deltaTime * 0.23
     }
 
     // Render
