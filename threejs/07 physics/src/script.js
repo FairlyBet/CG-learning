@@ -90,9 +90,6 @@ floor.receiveShadow = true
 floor.rotation.x = - Math.PI * 0.5
 scene.add(floor)
 
-/**
- * Lights
- */
 const ambientLight = new THREE.AmbientLight(0xffffff, 2.1)
 scene.add(ambientLight)
 
