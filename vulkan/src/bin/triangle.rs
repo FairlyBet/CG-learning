@@ -22,7 +22,7 @@ fn main() {
         .iter()
         .map(|ext| ext.as_ptr())
         .collect::<Vec<_>>();
-    println!("{extensions:?}");
+    // println!("{extensions:?}");
 
     let entry = unsafe { ash::Entry::load().unwrap() };
 
@@ -38,7 +38,6 @@ fn main() {
         .iter()
         .map(|ext| ext.as_ptr())
         .collect::<Vec<_>>();
-
     if cfg!(debug_assertions) {
         let avaialble_layers = unsafe { entry.enumerate_instance_layer_properties().unwrap() };
         let debug_layers = validation_layers.iter().all(|layer| {
@@ -55,11 +54,23 @@ fn main() {
         .enabled_layer_names(&validation_layers_pointers);
 
     let instance = unsafe { entry.create_instance(&create_info, None).unwrap() };
-    let devices = unsafe { instance.enumerate_physical_devices().unwrap() };
     let extensions = unsafe { entry.enumerate_instance_extension_properties(None).unwrap() };
     for ext in extensions {
         println!("{ext:?}");
     }
+    let devices = unsafe { instance.enumerate_physical_devices().unwrap() };
+    let device = devices
+        .into_iter()
+        .find(|device| {
+            let properties = unsafe { instance.get_physical_device_properties(*device) };
+            properties.device_type == vk::PhysicalDeviceType::DISCRETE_GPU
+                && find_queue_family(&instance, device, vk::QueueFlags::GRAPHICS).is_some()
+        })
+        .unwrap();
+    let family_index = find_queue_family(&instance, &device, vk::QueueFlags::GRAPHICS).unwrap();
+    let queue_create_info = vk::DeviceQueueCreateInfo::default()
+        .queue_family_index(family_index)
+        .queue_priorities(&[1.0]);
 
     // window.create_window_surface(instance, allocator, surface)
 
@@ -76,4 +87,18 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
         _ => {}
     }
+}
+
+fn find_queue_family(
+    instance: &ash::Instance,
+    device: &vk::PhysicalDevice,
+    flags: vk::QueueFlags,
+) -> Option<u32> {
+    let queue_families =
+        unsafe { instance.get_physical_device_queue_family_properties(device.to_owned()) };
+    queue_families
+        .iter()
+        .enumerate()
+        .find(|(_, family)| (family.queue_flags.contains(flags)))
+        .map(|(i, _)| i as u32)
 }
