@@ -14,8 +14,8 @@ pub struct QueueFamilyIndices {
 pub fn find_graphics_device(
     vk: &Vulkan,
     surface: ash::vk::SurfaceKHR,
+    required_device_extentions: &[ &std::ffi::CStr ]
 ) -> Option<(ash::vk::PhysicalDevice, QueueFamilyIndices)> {
-    let required_device_extensions = [ash::vk::KHR_SWAPCHAIN_NAME];
     let devices = unsafe { vk.instance.enumerate_physical_devices().unwrap() };
 
     for device in devices {
@@ -48,7 +48,7 @@ pub fn find_graphics_device(
                 .enumerate_device_extension_properties(device)
                 .unwrap()
         };
-        let supports_extensions = required_device_extensions.iter().all(|target| {
+        let supports_extensions = required_device_extentions.iter().all(|target| {
             extensions
                 .iter()
                 .any(|ext| ext.extension_name_as_c_str().unwrap().eq(target))

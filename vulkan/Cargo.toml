@@ -8,3 +8,4 @@ ash = "0.38.0"
 ash-window = "0.13.0"
 glfw = { version = "0.59.0", features = ["vulkan"] }
 raw-window-handle = "0.6.2"
+rustc-hash = "2.1.1"

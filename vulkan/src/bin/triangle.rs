@@ -1,11 +1,9 @@
 use ash::vk;
 use glfw::{Action, ClientApiHint, Key, WindowHint};
 use raw_window_handle::{HasDisplayHandle as _, HasWindowHandle as _};
-use std::{
-    collections::HashSet,
-    ffi::{CStr, CString},
-};
-use vulkan_demo::Vulkan;
+use rustc_hash::FxHashSet as HashSet;
+use std::ffi::CString;
+use vulkan_demo::{Vulkan, util};
 
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
@@ -31,20 +29,20 @@ fn main() {
         .into_iter()
         .map(|ext| CString::new(ext).unwrap())
         .collect::<Vec<_>>();
-    let extension_pointers = as_ptr(&extensions);
+    let extension_pointers = util::to_pointers(&extensions);
 
     let mut create_info = vk::InstanceCreateInfo::default()
         .application_info(&application_info)
         .enabled_extension_names(&extension_pointers);
 
-    let validation_layers = vec![c"VK_LAYER_KHRONOS_validation"];
-    let validation_layers_pointers = as_ptr(&validation_layers);
+    let validation_layers = [c"VK_LAYER_KHRONOS_validation"];
+    let validation_layers_pointers = util::to_pointers(&validation_layers);
     if cfg!(debug_assertions) {
         let avaialble_layers = unsafe { entry.enumerate_instance_layer_properties().unwrap() };
-        let debug_layers_available = validation_layers.iter().all(|layer| {
+        let debug_layers_available = validation_layers.iter().all(|target| {
             avaialble_layers
                 .iter()
-                .any(|l| (*layer).eq(l.layer_name_as_c_str().unwrap()))
+                .any(|layer| (*target).eq(layer.layer_name_as_c_str().unwrap()))
         });
         assert!(debug_layers_available);
         create_info = create_info.enabled_layer_names(&validation_layers_pointers);
@@ -70,13 +68,19 @@ fn main() {
         .unwrap()
     };
 
-    let (physical_device, family_indices) =
-        vulkan_demo::find_graphics_device(&vk, surface).unwrap();
+    let device_extentions = [ash::vk::KHR_SWAPCHAIN_NAME];
+    let device_extentions_pointers = util::to_pointers(&device_extentions);
 
-    let unique_queue_families = HashSet::from([
-        family_indices.graphics_family,
-        family_indices.present_family,
-    ]);
+    let (physical_device, family_indices) =
+        vulkan_demo::find_graphics_device(&vk, surface, &device_extentions).unwrap();
+
+    let unique_queue_families = HashSet::from_iter(
+        [
+            family_indices.graphics_family,
+            family_indices.present_family,
+        ]
+        .into_iter(),
+    );
     let mut queue_create_infos = vec![];
     for queue_family in unique_queue_families {
         let queue_create_info = vk::DeviceQueueCreateInfo::default()
@@ -85,11 +89,11 @@ fn main() {
         queue_create_infos.push(queue_create_info);
     }
     let physical_device_features = vk::PhysicalDeviceFeatures::default();
-    let required_device_extensions = [ash::vk::KHR_SWAPCHAIN_NAME.as_ptr()];
+
     let device_create_info = vk::DeviceCreateInfo::default()
         .queue_create_infos(&queue_create_infos)
         .enabled_features(&physical_device_features)
-        .enabled_extension_names(&required_device_extensions);
+        .enabled_extension_names(&device_extentions_pointers);
 
     let logical_device = unsafe {
         vk.instance
@@ -97,10 +101,31 @@ fn main() {
             .unwrap()
     };
 
+    let surface_capabilities = unsafe {
+        vk.surface_instance
+            .get_physical_device_surface_capabilities(physical_device, surface)
+            .unwrap()
+    };
+    let formats = unsafe {
+        vk.surface_instance
+            .get_physical_device_surface_formats(physical_device, surface)
+            .unwrap()
+    };
+    let presentation_modes = unsafe {
+        vk.surface_instance
+            .get_physical_device_surface_present_modes(physical_device, surface)
+            .unwrap()
+    };
+    println!("{surface_capabilities:?}");
+    println!("{formats:?}");
+    println!("{presentation_modes:?}");
+
     let graphics_queue =
         unsafe { logical_device.get_device_queue(family_indices.graphics_family, 0) };
     let present_queue =
         unsafe { logical_device.get_device_queue(family_indices.present_family, 0) };
+    println!("{graphics_queue:?}");
+    println!("{present_queue:?}");
 
     while !window.should_close() {
         glfw.poll_events();
@@ -115,8 +140,4 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
         _ => {}
     }
-}
-
-fn as_ptr<T: AsRef<CStr>>(val: &[T]) -> Vec<*const i8> {
-    val.iter().map(|v| v.as_ref().as_ptr()).collect()
 }
