@@ -1,17 +1,17 @@
 [package]
 name = "cgl"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [profile.dev.package."*"]
 opt-level = 3
 
 [dependencies]
 gl = "0.14.0"
-glfw = "0.59.0"
+glfw = "0.60.0"
 image = "0.25.5"
-nalgebra-glm = "0.19.0"
-russimp = { version = "3.2.0", features = ['prebuilt'] }
+nalgebra-glm = "0.20.0"
+russimp = { version = "3.2.1", features = ['prebuilt'] }
 
 [[bin]]
 name = "environment_mapping"
@@ -24,3 +24,7 @@ path = "cube-map_reflections/main.rs"
 [[bin]]
 name = "shadow-mapping"
 path = "shadow-mapping/main.rs"
+
+[[bin]]
+name = "cube"
+path = "src/main.rs"

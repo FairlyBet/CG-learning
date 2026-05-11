@@ -1,10 +1,10 @@
-use glm::{Mat4, Vec3};
+use glm::{Mat4, Quat, Vec3};
 use nalgebra_glm as glm;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Transform {
     pub position: Vec3,
-    pub rotation: glm::Quat,
+    pub rotation: Quat,
     pub scale: Vec3,
 }
 

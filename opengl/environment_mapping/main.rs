@@ -1,3 +1,5 @@
+use std::{ffi::c_void, ptr};
+
 use glfw::Context as _;
 use nalgebra_glm as glm;
 
@@ -12,7 +14,11 @@ fn main() {
         .create_window(width, height, "", glfw::WindowMode::Windowed)
         .unwrap();
 
-    gl::load_with(|symbol| window.get_proc_address(symbol));
+    gl::load_with(|symbol| {
+        window
+            .get_proc_address(symbol)
+            .map_or(ptr::null(), |f| f as *const c_void)
+    });
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
     let vertex_shader_source = include_str!("../shaders/cubemap_background.vert");
